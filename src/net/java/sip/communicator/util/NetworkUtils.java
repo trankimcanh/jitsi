@@ -107,6 +107,14 @@ public class NetworkUtils
      */
     private static final Random random = new Random();
 
+    static
+    {
+        String prefer6 = System.getProperty("java.net.preferIPv6Addresses");
+        String prefer4 = System.getProperty("java.net.preferIPv4Stack");
+        logger.info("java.net.preferIPv6Addresses=" + prefer6);
+        logger.info("java.net.preferIPv4Stack=" + prefer4);
+    }
+
     /**
      * Determines whether the address is the result of windows auto configuration.
      * (i.e. One that is in the 169.254.0.0 network)
@@ -420,6 +428,15 @@ public class NetworkUtils
 
         colonIndex = -1;
         int i = 0, j = 0;
+
+        // Can be wrapped in []
+        if (addrBuff[i] == '[')
+        {
+            ++i;
+            if (scopeID == -1)
+                --srcb_length;
+        }
+
         // Starting : mean we need to have at least one more.
         if (addrBuff[i] == ':')
             if (addrBuff[++i] != ':')
