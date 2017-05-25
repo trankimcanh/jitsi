@@ -1221,13 +1221,12 @@ public class ProtocolProviderServiceJabberImpl
             throw new XMPPException("Error creating custom trust manager", e);
         }
 
-        // FIXME rework debugger to work with Connection if possible
-        if(debugger == null && connection instanceof XMPPConnection)
+        if(debugger == null)
         {
             debugger = new SmackPacketDebugger();
 
             // sets the debugger
-            debugger.setConnection((XMPPConnection) connection);
+            debugger.setConnection(connection);
             connection.addPacketListener(debugger, null);
             connection.addPacketInterceptor(debugger, null);
         }
@@ -1821,11 +1820,6 @@ public class ProtocolProviderServiceJabberImpl
                     OperationSetSecureSDesTelephony.class,
                     basicTelephony);
 
-                // initialize video telephony OperationSet
-                addSupportedOperationSet(
-                    OperationSetVideoTelephony.class,
-                    new OperationSetVideoTelephonyJabberImpl(basicTelephony));
-
                 addSupportedOperationSet(
                     OperationSetTelephonyConferencing.class,
                     new OperationSetTelephonyConferencingJabberImpl(this));
@@ -1864,47 +1858,65 @@ public class ProtocolProviderServiceJabberImpl
 
                 addJingleFeatures();
 
-                // Check if desktop streaming is enabled.
-                boolean isDesktopStreamingDisabled
-                    = JabberActivator.getConfigurationService()
-                        .getBoolean(IS_DESKTOP_STREAMING_DISABLED, false);
-
-                boolean isAccountDesktopStreamingDisabled
+                boolean isVideoCallingDisabledForAccount
                     = accountID.getAccountPropertyBoolean(
+                        ProtocolProviderFactory
+                            .IS_VIDEO_CALLING_DISABLED_FOR_ACCOUNT,
+                        false);
+
+                // initialize video telephony OperationSet
+                if (!isVideoCallingDisabledForAccount)
+                {
+                    supportedFeatures.add(URN_XMPP_JINGLE_RTP_VIDEO);
+
+                    addSupportedOperationSet(
+                        OperationSetVideoTelephony.class,
+                        new OperationSetVideoTelephonyJabberImpl(
+                            basicTelephony));
+
+                    // Check if desktop streaming is enabled.
+                    boolean isDesktopStreamingDisabled
+                        = JabberActivator.getConfigurationService()
+                            .getBoolean(IS_DESKTOP_STREAMING_DISABLED, false);
+
+                    boolean isAccountDesktopStreamingDisabled
+                        = accountID.getAccountPropertyBoolean(
                         ProtocolProviderFactory.IS_DESKTOP_STREAMING_DISABLED,
                         false);
 
-                if (!isDesktopStreamingDisabled
-                    && !isAccountDesktopStreamingDisabled)
-                {
-                    // initialize desktop streaming OperationSet
-                    addSupportedOperationSet(
+                    if (!isDesktopStreamingDisabled
+                        && !isAccountDesktopStreamingDisabled)
+                    {
+                        // initialize desktop streaming OperationSet
+                        addSupportedOperationSet(
                             OperationSetDesktopStreaming.class,
                             new OperationSetDesktopStreamingJabberImpl(
                                 basicTelephony));
 
-                    if(!accountID.getAccountPropertyBoolean(
-                        ProtocolProviderFactory
-                            .IS_DESKTOP_REMOTE_CONTROL_DISABLED,
-                        false))
-                    {
-                        // initialize desktop sharing OperationSets
-                        addSupportedOperationSet(
-                            OperationSetDesktopSharingServer.class,
-                            new OperationSetDesktopSharingServerJabberImpl(
-                                basicTelephony));
+                        if (!accountID.getAccountPropertyBoolean(
+                            ProtocolProviderFactory
+                                .IS_DESKTOP_REMOTE_CONTROL_DISABLED,
+                            false))
+                        {
+                            // initialize desktop sharing OperationSets
+                            addSupportedOperationSet(
+                                OperationSetDesktopSharingServer.class,
+                                new OperationSetDesktopSharingServerJabberImpl(
+                                    basicTelephony));
 
-                        // Adds extension to support remote control as a sharing
-                        // server (sharer).
-                        supportedFeatures.add(InputEvtIQ.NAMESPACE_SERVER);
+                            // Adds extension to support remote control as a
+                            // sharing server (sharer).
+                            supportedFeatures.add(InputEvtIQ.NAMESPACE_SERVER);
 
-                        addSupportedOperationSet(
-                            OperationSetDesktopSharingClient.class,
-                            new OperationSetDesktopSharingClientJabberImpl(this)
+                            addSupportedOperationSet(
+                                OperationSetDesktopSharingClient.class,
+                                new OperationSetDesktopSharingClientJabberImpl(
+                                    this)
                             );
-                        // Adds extension to support remote control as a sharing
-                        // client (sharer).
-                        supportedFeatures.add(InputEvtIQ.NAMESPACE_CLIENT);
+                            // Adds extension to support remote control as
+                            // a sharing client (sharer).
+                            supportedFeatures.add(InputEvtIQ.NAMESPACE_CLIENT);
+                        }
                     }
                 }
             }
@@ -1984,7 +1996,6 @@ public class ProtocolProviderServiceJabberImpl
         }
 
         supportedFeatures.add(URN_XMPP_JINGLE_RTP_AUDIO);
-        supportedFeatures.add(URN_XMPP_JINGLE_RTP_VIDEO);
         supportedFeatures.add(URN_XMPP_JINGLE_RTP_ZRTP);
 
         /*

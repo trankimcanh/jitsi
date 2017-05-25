@@ -52,6 +52,17 @@ public class ColibriConferenceIQ
     public static final String ID_ATTR_NAME = "id";
 
     /**
+     * The XML name of the <tt>gid</tt> attribute of the Jitsi Videobridge
+     * <tt>conference</tt> IQ which represents the value of the <tt>gid</tt>
+     * property of <tt>ColibriConferenceIQ</tt>.
+     * This is a "global" ID of a conference, which is selected by the
+     * conference organizer, as opposed to "id" which is specific to a single
+     * Jitsi Videobridge and is selected by the bridge.
+     *
+     */
+    public static final String GID_ATTR_NAME = "gid";
+
+    /**
      * The XML name of the <tt>name</tt> attribute of the Jitsi Videobridge
      * <tt>conference</tt> IQ which represents the value of the <tt>name</tt>
      * property of <tt>ColibriConferenceIQ</tt> if available.
@@ -99,6 +110,12 @@ public class ColibriConferenceIQ
      * The ID of the conference represented by this IQ.
      */
     private String id;
+
+    /**
+     * The ID of the global conference to which the conference represented by
+     * this {@link ColibriConferenceIQ} belongs.
+     */
+    private String gid;
 
     /**
      * Media recording.
@@ -259,14 +276,25 @@ public class ColibriConferenceIQ
         xml.append(" xmlns='").append(NAMESPACE).append('\'');
 
         String id = getID();
+        String gid = getGID();
 
         if (id != null)
+        {
             xml.append(' ').append(ID_ATTR_NAME).append("='").append(id)
-                    .append('\'');
+                .append('\'');
+        }
+
+        if (gid != null)
+        {
+            xml.append(' ').append(GID_ATTR_NAME).append("='").append(gid)
+                .append('\'');
+        }
 
         if (name != null)
+        {
             xml.append(' ').append(NAME_ATTR_NAME).append("='").append(name)
-                    .append('\'');
+                .append('\'');
+        }
 
         List<Content> contents = getContents();
         List<ChannelBundle> channelBundles = getChannelBundles();
@@ -355,6 +383,14 @@ public class ColibriConferenceIQ
     }
 
     /**
+     * @return the "global" ID of the conference represented by this IQ.
+     */
+    public String getGID()
+    {
+        return gid;
+    }
+
+    /**
      * Returns a <tt>Content</tt> from the list of <tt>Content</tt>s of this
      * <tt>conference</tt> IQ which has a specific name. If no such
      * <tt>Content</tt> exists at the time of the invocation of the method,
@@ -409,11 +445,21 @@ public class ColibriConferenceIQ
     /**
      * Sets the ID of the conference represented by this IQ.
      *
-     * @param id the ID of the conference represented by this IQ
+     * @param id the value to set.
      */
     public void setID(String id)
     {
         this.id = id;
+    }
+
+    /**
+     * Sets the "global" ID of the conference represented by this IQ.
+     *
+     * @param gid the value to set.
+     */
+    public void setGID(String gid)
+    {
+        this.gid = gid;
     }
 
     /**
@@ -511,20 +557,6 @@ public class ColibriConferenceIQ
         public static final String LAST_N_ATTR_NAME = "last-n";
 
         /**
-         * The XML name of the <tt>adaptive-last-n</tt> attribute of a video
-         * <tt>channel</tt>.
-         */
-        public static final String ADAPTIVE_LAST_N_ATTR_NAME
-            = "adaptive-last-n";
-
-        /**
-         * The XML name of the <tt>adaptive-simulcast</tt> attribute of a video
-         * <tt>channel</tt>.
-         */
-        public static final String ADAPTIVE_SIMULCAST_ATTR_NAME
-                = "adaptive-simulcast";
-
-        /**
          * The XML name of the <tt>simulcast-mode</tt> attribute of a video
          * <tt>channel</tt>.
          */
@@ -604,16 +636,6 @@ public class ColibriConferenceIQ
          * <tt>Channel</tt>.
          */
         private Integer lastN;
-
-        /**
-         * The 'adaptive-last-n' flag.
-         */
-        private Boolean adaptiveLastN;
-
-        /**
-         * The 'adaptive-simulcast' flag.
-         */
-        private Boolean adaptiveSimulcast;
 
         /**
          * The 'simulcast-mode' flag.
@@ -879,24 +901,6 @@ public class ColibriConferenceIQ
         }
 
         /**
-         * Gets the value of the 'adaptive-last-n' flag.
-         * @return the value of the 'adaptive-last-n' flag.
-         */
-        public Boolean getAdaptiveLastN()
-        {
-            return adaptiveLastN;
-        }
-
-        /**
-         * Gets the value of the 'adaptive-simulcast' flag.
-         * @return the value of the 'adaptive-simulcast' flag.
-         */
-        public Boolean getAdaptiveSimulcast()
-        {
-            return adaptiveSimulcast;
-        }
-
-        /**
          * Gets the value of the 'simulcast-mode' flag.
          * @return the value of the 'simulcast-mode' flag.
          */
@@ -1092,18 +1096,6 @@ public class ColibriConferenceIQ
             {
                 xml.append(' ').append(LAST_N_ATTR_NAME).append("='")
                         .append(lastN).append('\'');
-            }
-
-            if (adaptiveLastN != null)
-            {
-                xml.append(' ').append(ADAPTIVE_LAST_N_ATTR_NAME).append("='")
-                        .append(adaptiveLastN).append('\'');
-            }
-
-            if (adaptiveSimulcast != null)
-            {
-                xml.append(' ').append(ADAPTIVE_SIMULCAST_ATTR_NAME)
-                        .append("='").append(adaptiveSimulcast).append('\'');
             }
 
             // packet-delay
@@ -1326,24 +1318,6 @@ public class ColibriConferenceIQ
         public void setLastN(Integer lastN)
         {
             this.lastN = lastN;
-        }
-
-        /**
-         * Sets the value of the 'adaptive-last-n' flag.
-         * @param adaptiveLastN the value to set.
-         */
-        public void setAdaptiveLastN(Boolean adaptiveLastN)
-        {
-            this.adaptiveLastN = adaptiveLastN;
-        }
-
-        /**
-         * Sets the value of the 'adaptive-simulcast' flag.
-         * @param adaptiveSimulcast the value to set.
-         */
-        public void setAdaptiveSimulcast(Boolean adaptiveSimulcast)
-        {
-            this.adaptiveSimulcast = adaptiveSimulcast;
         }
 
         /**
